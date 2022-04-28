@@ -6,38 +6,48 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.recyclerview.widget.RecyclerView
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.example.todojeanlorisgankpe_v2.R
 import com.example.todojeanlorisgankpe_v2.databinding.FragmentTaskListBinding
 import com.example.todojeanlorisgankpe_v2.form.FormActivity
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-
-import java.util.*
+import com.example.todojeanlorisgankpe_v2.network.Api
+import kotlinx.coroutines.launch
 
 class TaskListFragment : Fragment() {
     private val adapter = TaskListAdapter()
+    private val viewModel: TaskListViewModel by viewModels()
     private lateinit var binding: FragmentTaskListBinding
-    private var taskList = listOf(
-        Task(id = "id_1", title = "Task 1", description = "description 1"),
-    )
 
     val createTask = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         // ici on récupérera le résultat pour le traiter
         val task = result.data?.getSerializableExtra("task") as Task? ?: return@registerForActivityResult
-        taskList = taskList + task
-        binding.recyclerView.adapter = adapter
-        adapter.submitList(taskList)
+        viewModel.create(task)
     }
 
     val editTask = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         // ici on récupérera le résultat pour le traiter
         val task = result.data?.getSerializableExtra("task") as Task? ?: return@registerForActivityResult
-        taskList = taskList.map { if (it.id == task.id) task else it }
-        binding.recyclerView.adapter = adapter
-        adapter.submitList(taskList)
+        viewModel.update(task)
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+
+        viewModel.refresh()
+
+        lifecycleScope.launch {
+            // Ici on ne va pas gérer les cas d'erreur donc on force le crash avec "!!"
+            val userInfo = Api.userWebService.getInfo().body()!!
+
+            var userInfoText = view?.findViewById<TextView>(R.id.userInfoText)
+            userInfoText?.text = "${userInfo.firstName} ${userInfo.lastName}"
+        }
+
+
     }
 
     override fun onCreateView(
@@ -50,13 +60,19 @@ class TaskListFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        lifecycleScope.launch { // on lance une coroutine car `collect` est `suspend`
+            viewModel.tasksStateFlow.collect { newList ->
+                // cette lambda est executée à chaque fois que la liste est mise à jour dans le VM
+                // -> ici, on met à jour la liste dans l'adapter
+                adapter.submitList(newList)
+            }
+        }
+
         binding.recyclerView.adapter = adapter
-        adapter.submitList(taskList)
 
         adapter.onClickDelete =  { task ->
-            taskList = taskList - task
-            binding.recyclerView.adapter = adapter
-            adapter.submitList(taskList)
+            viewModel.delete(task)
+
         }
 
         adapter.onClickEdit = { task ->
@@ -72,7 +88,12 @@ class TaskListFragment : Fragment() {
         }
 
 
+
+
     }
+
+
+
 
 
 }
