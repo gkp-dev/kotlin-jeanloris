@@ -18,13 +18,27 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
 
 class TaskListFragment : Fragment() {
-
+    private val adapter = TaskListAdapter()
     private lateinit var binding: FragmentTaskListBinding
     private var taskList = listOf(
         Task(id = "id_1", title = "Task 1", description = "description 1"),
     )
 
-    private val adapter = TaskListAdapter()
+    val createTask = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        // ici on récupérera le résultat pour le traiter
+        val task = result.data?.getSerializableExtra("task") as Task? ?: return@registerForActivityResult
+        taskList = taskList + task
+        binding.recyclerView.adapter = adapter
+        adapter.submitList(taskList)
+    }
+
+    val editTask = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        // ici on récupérera le résultat pour le traiter
+        val task = result.data?.getSerializableExtra("task") as Task? ?: return@registerForActivityResult
+        taskList = taskList.map { if (it.id == task.id) task else it }
+        binding.recyclerView.adapter = adapter
+        adapter.submitList(taskList)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -45,20 +59,16 @@ class TaskListFragment : Fragment() {
             adapter.submitList(taskList)
         }
 
-        val createTask = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            // ici on récupérera le résultat pour le traiter
-            val task = result.data?.getSerializableExtra("task") as Task? ?: return@registerForActivityResult
-            taskList = taskList + task
-            binding.recyclerView.adapter = adapter
-            adapter.submitList(taskList)
+        adapter.onClickEdit = { task ->
+            val intent = Intent(context, FormActivity::class.java)
+            intent.putExtra("task", task)
+            editTask.launch(intent)
         }
 
         binding.floatingActionButton.setOnClickListener() {
             val intent = Intent(context, FormActivity::class.java)
             createTask.launch(intent)
             //val newTask = Task(id = UUID.randomUUID().toString(), title = "Task ${taskList.size + 1}")
-
-
         }
 
 

@@ -18,7 +18,13 @@
         android:background="@color/design_default_color_secondary" />
 
     <ImageButton
-        android:id="@+id/imageButton"
+        android:id="@+id/editTask"
+        android:layout_width="31dp"
+        android:layout_height="36dp"
+        app:srcCompat="@android:drawable/ic_menu_edit" />
+
+    <ImageButton
+        android:id="@+id/deleteTask"
         android:layout_width="37dp"
         android:layout_height="35dp"
         app:srcCompat="@android:drawable/ic_menu_delete" />
