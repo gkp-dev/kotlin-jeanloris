@@ -6,11 +6,15 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import coil.load
+import coil.transform.CircleCropTransformation
 import com.example.todojeanlorisgankpe_v2.R
+import com.example.todojeanlorisgankpe_v2.UserInfoActivity
 import com.example.todojeanlorisgankpe_v2.databinding.FragmentTaskListBinding
 import com.example.todojeanlorisgankpe_v2.form.FormActivity
 import com.example.todojeanlorisgankpe_v2.network.Api
@@ -33,19 +37,38 @@ class TaskListFragment : Fragment() {
         viewModel.update(task)
     }
 
+    val launchTask = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        // ici on récupérera le résultat pour le traiter
+
+    }
+
 
     override fun onResume() {
         super.onResume()
 
         viewModel.refresh()
+        var avatarImageView = view?.findViewById<ImageView>(R.id.avatarImageView)
+        var userInfoText = view?.findViewById<TextView>(R.id.userInfoText)
 
         lifecycleScope.launch {
             // Ici on ne va pas gérer les cas d'erreur donc on force le crash avec "!!"
             val userInfo = Api.userWebService.getInfo().body()!!
 
-            var userInfoText = view?.findViewById<TextView>(R.id.userInfoText)
+
             userInfoText?.text = "${userInfo.firstName} ${userInfo.lastName}"
+
+            avatarImageView?.load( userInfo.avatar){
+                transformations(CircleCropTransformation())
+            }
         }
+
+
+        // Event
+        avatarImageView?.setOnClickListener {
+            val intent = Intent(context, UserInfoActivity::class.java)
+            launchTask.launch(intent)
+        }
+
 
 
     }

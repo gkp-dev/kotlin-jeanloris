@@ -1,5 +1,6 @@
 package com.example.todojeanlorisgankpe_v2.network
 
+import android.graphics.Bitmap
 import com.example.todojeanlorisgankpe_v2.tasklist.Task
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.SerialName
@@ -9,8 +10,11 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import kotlinx.serialization.Serializable
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
 import retrofit2.http.*
+import java.io.File
 
 @Serializable
 data class UserInfo(
@@ -19,12 +23,18 @@ data class UserInfo(
     @SerialName("firstname")
     val firstName: String,
     @SerialName("lastname")
-    val lastName: String
+    val lastName: String,
+    @SerialName("avatar")
+    val avatar: String?
 )
 
 interface UserWebService {
     @GET("users/info")
     suspend fun getInfo(): Response<UserInfo>
+
+    @Multipart
+    @PATCH("users/update_avatar")
+    suspend fun updateAvatar(@Part avatar: MultipartBody.Part): Response<UserInfo>
 }
 
 interface TasksWebService {
@@ -50,6 +60,7 @@ object Api {
     val tasksWebService : TasksWebService by lazy {
         retrofit.create(TasksWebService::class.java)
     }
+
 
     private const val TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo3MjAsImV4cCI6MTY4MjY4Nzk5M30.MavgrxhFzRbiFYdiamkYgXY1Cv1SoUZRLqYPcH3b0is"
 
