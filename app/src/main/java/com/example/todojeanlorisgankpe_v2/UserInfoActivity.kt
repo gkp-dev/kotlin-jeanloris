@@ -50,7 +50,7 @@ class UserInfoActivity : AppCompatActivity() {
     private val photoUri by lazy {
         fileSystem.createMediaStoreUri(
             filename = "picture-${UUID.randomUUID()}.jpg",
-            collection = MediaStore.Images.Media.INTERNAL_CONTENT_URI,
+            collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             directory = "Todo",
         )!!
     }
@@ -113,7 +113,7 @@ class UserInfoActivity : AppCompatActivity() {
             RequestAccess.Args(
                 action = StoragePermissions.Action.READ_AND_WRITE,
                 types = listOf(StoragePermissions.FileType.Image),
-                createdBy = StoragePermissions.CreatedBy.Self
+                createdBy = StoragePermissions.CreatedBy.AllApps
             )
         )
 
